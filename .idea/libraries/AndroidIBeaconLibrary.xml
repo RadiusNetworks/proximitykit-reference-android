@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="AndroidIBeaconLibrary">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/AndroidProximityKitReference/build/exploded-bundles/ComRadiusnetworksAndroidProximityLibrary1.aar/libs/AndroidIBeaconLibrary.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

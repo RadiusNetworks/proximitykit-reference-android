@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="android-beacon-library">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/AndroidProximityKitReference/build/exploded-aar/com.radiusnetworks/proximitykit-android/altbeacon-conversion-13-g4ee2a12/libs/android-beacon-library.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

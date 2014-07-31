@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.7.+'
+        classpath 'com.android.tools.build:gradle:0.9.+'
     }
 }
 apply plugin: 'android'
@@ -17,7 +17,7 @@ repositories {
 
 android {
     compileSdkVersion 18
-    buildToolsVersion "19.0.0"
+    buildToolsVersion "19.0.3"
 
     defaultConfig {
         minSdkVersion 7
@@ -39,7 +39,6 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:+'
-    compile 'com.radiusnetworks:AndroidProximityLibrary:1+@aar'
+    compile 'com.android.support:appcompat-v7:19.+'
+    compile 'com.radiusnetworks:proximitykit-android:+@aar'
 }
-

@@ -8,21 +8,27 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.radiusnetworks.proximity.ProximityKitManager;
-import com.radiusnetworks.proximity.ProximityKitNotifier;
+import com.radiusnetworks.proximity.ProximityKitMonitorNotifier;
+import com.radiusnetworks.proximity.ProximityKitRangeNotifier;
+import com.radiusnetworks.proximity.ProximityKitRegion;
+import com.radiusnetworks.proximity.ProximityKitSyncNotifier;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconData;
-import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.client.DataProviderException;
 
 import java.util.Date;
 
 /**
  * Created by dyoung on 4/2/14.
+ *
+ * Note:  the kit associated with this
  */
-public class AndroidProximityKitReferenceApplication extends Application implements ProximityKitNotifier {
+public class AndroidProximityKitReferenceApplication extends Application implements ProximityKitMonitorNotifier, ProximityKitRangeNotifier, ProximityKitSyncNotifier {
 
-    public static final String TAG = "ProximityKitReferenceApplication";
+    public static final String TAG = "AndroidProximityKitReferenceApplication";
     Date lastRefreshTime = new Date();
     private boolean haveDetectedBeaconsSinceBoot = false;
     private MainActivity mainActivity = null;
@@ -30,20 +36,28 @@ public class AndroidProximityKitReferenceApplication extends Application impleme
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate() called");
 
         ProximityKitManager pkManager = ProximityKitManager.getInstanceForApplication(this);
-        pkManager.setNotifier(this);
+
+        /* ----- begin code only for testing ---- */
+        pkManager.getBeaconManager().setDebug(true);
+        /* ----- end code only for testing ------ */
+
+        pkManager.setProximityKitSyncNotifier(this);
+        pkManager.setProximityKitMonitorNotifier(this);
+        pkManager.setProximityKitRangeNotifier(this);
         pkManager.start();
     }
 
     @Override
     public void didSync() {
-
+        Log.d(TAG, "didSync() called");
     }
 
     @Override
     public void didFailSync(Exception e) {
-
+        Log.d(TAG, "didFailSync() called with exception: "+e);
     }
 
     @Override
@@ -73,7 +87,7 @@ public class AndroidProximityKitReferenceApplication extends Application impleme
     }
 
     @Override
-    public void didEnterRegion(Region region) {
+    public void didEnterRegion(ProximityKitRegion region) {
         // In this example, this class sends a notification to the user whenever an beacon
         // matching a Region (defined above) are first seen.
         Log.d(TAG, "did enter region: " + region);
@@ -98,13 +112,13 @@ public class AndroidProximityKitReferenceApplication extends Application impleme
     }
 
     @Override
-    public void didExitRegion(Region region) {
-
+    public void didExitRegion(ProximityKitRegion region) {
+        Log.d(TAG, "didExitRegion called with region: "+region);
     }
 
     @Override
-    public void didDetermineStateForRegion(int i, Region region) {
-
+    public void didDetermineStateForRegion(int i, ProximityKitRegion region) {
+        Log.d(TAG, "didDeterineStateForRegion called with region: "+region);
     }
 
     private void sendNotification() {

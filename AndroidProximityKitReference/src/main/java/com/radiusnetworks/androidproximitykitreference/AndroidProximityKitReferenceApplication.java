@@ -15,18 +15,16 @@ import com.radiusnetworks.proximity.ProximityKitManager;
 import com.radiusnetworks.proximity.ProximityKitMonitorNotifier;
 import com.radiusnetworks.proximity.ProximityKitRangeNotifier;
 import com.radiusnetworks.proximity.ProximityKitSyncNotifier;
+import com.radiusnetworks.proximity.ProximityKitBeacon;
+import com.radiusnetworks.proximity.ProximityKitBeaconRegion;
 import com.radiusnetworks.proximity.geofence.GooglePlayServicesException;
 import com.radiusnetworks.proximity.model.KitBeacon;
 import com.radiusnetworks.proximity.model.KitOverlay;
 
-import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.BeaconData;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
-import org.altbeacon.beacon.client.DataProviderException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
 
 /**
  */
@@ -44,7 +42,6 @@ public class AndroidProximityKitReferenceApplication
     private boolean haveDetectedBeaconsSinceBoot = false;
     private MainActivity mainActivity = null;
     private ProximityKitManager pkManager = null;
-    private Map<String, Map<String, String>> attributeMap = null;
 
     @Override
     /**
@@ -66,7 +63,6 @@ public class AndroidProximityKitReferenceApplication
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate() called");
-        attributeMap = new HashMap<String, Map<String, String>>();
 
         // Hold a reference to the Proximity Kit manager to access the kit later
         pkManager = ProximityKitManager.getInstanceForApplication(this);
@@ -181,10 +177,6 @@ public class AndroidProximityKitReferenceApplication
     public void didSync() {
         Log.d(TAG, "didSync(): Sycn'd with server");
 
-        // We'll store a local copy of the attributes for reference later.
-        // First we clear the existing map, then we add each object via an id of our choice and
-        // it's attributes.
-        attributeMap.clear();
 
         // Access every beacon configured in the kit, printing out the value of an attribute
         // named "myKey"
@@ -194,10 +186,6 @@ public class AndroidProximityKitReferenceApplication
                     "For beacon: " + beacon.getProximityUuid() + " " + beacon.getMajor() + " " +
                             beacon.getMinor() + ", the value of myKey is " +
                             beacon.getAttributes().get("myKey")
-            );
-            attributeMap.put(
-                    generateId(beacon.getProximityUuid(), beacon.getMajor(), beacon.getMinor()),
-                    beacon.getAttributes()
             );
         }
 
@@ -209,10 +197,6 @@ public class AndroidProximityKitReferenceApplication
                     "For geofence: (" + overlay.getLatitude() + ", " + overlay.getLongitude() +
                             ") with radius " + overlay.getRadius() + ", the value of myKey is " +
                             overlay.getAttributes().get("myKey")
-            );
-            attributeMap.put(
-                    generateId(overlay.getLatitude(), overlay.getLongitude(), overlay.getRadius()),
-                    overlay.getAttributes()
             );
         }
     }
@@ -238,34 +222,26 @@ public class AndroidProximityKitReferenceApplication
 
     @Override
     /**
-     * Called whenever the Proximity Kit manager sees a registered beacon.
+     * Called whenever the Proximity Kit manager registered beacons.
      *
-     * @param beacon                    <code>org.altbeacon.beacon.Beacon</code> instance of the
-     *                                  beacon seen
-     * @param beaconData                <code>org.altbeacon.beacon.BeaconData</code> holds the
-     *                                  attributes set in the kit for the <code>beacon</code>
-     * @param DataProviderException     <code>org.altbeacon.beacon.client.DataProviderException</code>
-     *                                  instance if there was a problem fetching the
-     *                                  <code>beaconData</code>
+     * @param beacons   a collection of <code>ProximityKitBeacon</code> instances seen in the most
+     *                  recent ranging cycle.
+     * @param region    The <code>ProximityKitBeaconRegion</code> instance that was used to start
+     *                  ranging for these beacons.
      */
-    public void beaconDataUpdate(Beacon beacon, BeaconData beaconData, DataProviderException e) {
-        if (e != null) {
-            // Some sort of error was encountered. Log it for later.
-            Log.d(TAG, "Beacon data fetch error:" + e);
-        }
-
-        // Chances are we had some sort of error which we already logged. To avoid null pointer
-        // errors we just make sure we have data before continuing.
-        if (beaconData != null) {
+    public void didRangeBeaconsInRegion(Collection<ProximityKitBeacon> beacons, ProximityKitBeaconRegion region) {
+        Log.d(TAG, "didRangeBeaconsInRegion: size="+beacons.size());
+        for (ProximityKitBeacon beacon: beacons) {
             Log.d(
                     TAG,
                     "I have a beacon with data: " + beacon + " welcomeMessage=" +
-                            beaconData.get("welcomeMessage")
+                            beacon.getAttributes().get("welcomeMessage")
             );
 
             // We've wrapped up further behavior in some internal helper methods
             // Check their docs for details on additional things which you can do we beacon data
-            displayBeacon(beacon, beaconData);
+            displayBeacon(beacon);
+
         }
     }
 
@@ -285,15 +261,10 @@ public class AndroidProximityKitReferenceApplication
      * @param region    an <code>org.altbeacon.beacon.Region</code> which defines the criteria of
      *                  beacons being monitored
      */
-    public void didEnterRegion(Region region) {
-        // Look up the attributes
-        Map<String, String> attributes = attributeMap.get(
-                generateId(region.getId1(), region.getId2(), region.getId3())
-        );
-
+    public void didEnterRegion(ProximityKitBeaconRegion region) {
         // In this example, this class sends a notification to the user whenever an beacon
         // matching a Region (defined above) are first seen.
-        Log.d(TAG, "ENTER beacon region: " + region + " " + attributes.get("welcomeMessage"));
+        Log.d(TAG, "ENTER beacon region: " + region + " " + region.getAttributes().get("welcomeMessage"));
 
         // Attempt to open the app now that we've entered a region if we started in the background
         tryAutoLaunch();
@@ -309,7 +280,7 @@ public class AndroidProximityKitReferenceApplication
      * @param region    an <code>org.altbeacon.beacon.Region</code> that defines the criteria of
      *                  beacons being monitored
      */
-    public void didExitRegion(Region region) {
+    public void didExitRegion(ProximityKitBeaconRegion region) {
         Log.d(TAG, "didExitRegion called with region: " + region);
     }
 
@@ -324,23 +295,18 @@ public class AndroidProximityKitReferenceApplication
      * @param region    an <code>org.altbeacon.beacon.Region</code> that defines the criteria of
      *                  beacons being monitored
      */
-    public void didDetermineStateForRegion(int state, Region region) {
+    public void didDetermineStateForRegion(int state, ProximityKitBeaconRegion region) {
         Log.d(TAG, "didDeterineStateForRegion called with region: " + region);
-
-        // Look up the attributes
-        Map<String, String> attributes = attributeMap.get(
-                generateId(region.getId1(), region.getId2(), region.getId3())
-        );
 
         switch (state) {
             case MonitorNotifier.INSIDE:
-                String welcomeMessage = attributes.get("welcomeMessage");
+                String welcomeMessage = region.getAttributes().get("welcomeMessage");
                 if (welcomeMessage != null) {
                     Log.d(TAG, "Beacon " + region + " says: " + welcomeMessage);
                 }
                 break;
             case MonitorNotifier.OUTSIDE:
-                String goodbyeMessage = attributes.get("goodbyeMessage");
+                String goodbyeMessage = region.getAttributes().get("goodbyeMessage");
                 if (goodbyeMessage != null) {
                     Log.d(TAG, "Beacon " + region + " says: " + goodbyeMessage);
                 }
@@ -368,17 +334,12 @@ public class AndroidProximityKitReferenceApplication
      *                  Geofence to look for
      */
     public void didEnterGeofence(ProximityKitGeofenceRegion region) {
-        // Look up the attributes
-        Map<String, String> attributes = attributeMap.get(
-                generateId(region.getLatitude(), region.getLongitude(), region.getRadius())
-        );
-
         // In this example, this class sends a notification to the user whenever an beacon
         // matching a Region (defined above) are first seen.
         Log.d(
                 TAG,
                 "didEnterGeofenceRegion called with region: " + region + " " +
-                        attributes.get("welcomeMessage")
+                        region.getAttributes().get("welcomeMessage")
         );
 
         // Attempt to open the app now that we've entered a region if we started in the background
@@ -389,7 +350,7 @@ public class AndroidProximityKitReferenceApplication
 
         // Force a sync if we enter the main office so we ensure we have the latest data.
         // We wouldn't want the boss to think we weren't working ┌( ಠ_ಠ)┘
-        if (attributes.get("location") == MAIN_OFFICE_LOCATION) {
+        if (region.getAttributes().get("location") == MAIN_OFFICE_LOCATION) {
             forceSync();
         }
     }
@@ -423,20 +384,15 @@ public class AndroidProximityKitReferenceApplication
     public void didDetermineStateForGeofence(int state, ProximityKitGeofenceRegion region) {
         Log.d(TAG, "didDeterineStateForGeofence called with region: " + region);
 
-        // Look up the attributes
-        Map<String, String> attributes = attributeMap.get(
-                generateId(region.getLatitude(), region.getLongitude(), region.getRadius())
-        );
-
         switch (state) {
             case ProximityKitGeofenceNotifier.INSIDE:
-                String welcomeMessage = attributes.get("welcomeMessage");
+                String welcomeMessage = region.getAttributes().get("welcomeMessage");
                 if (welcomeMessage != null) {
                     Log.d(TAG, "Geofence " + region + " says: " + welcomeMessage);
                 }
                 break;
             case ProximityKitGeofenceNotifier.OUTSIDE:
-                String goodbyeMessage = attributes.get("goodbyeMessage");
+                String goodbyeMessage = region.getAttributes().get("goodbyeMessage");
                 if (goodbyeMessage != null) {
                     Log.d(TAG, "Geofence " + region + " says: " + goodbyeMessage);
                 }
@@ -460,16 +416,14 @@ public class AndroidProximityKitReferenceApplication
      *
      * @param beacon                    <code>org.altbeacon.beacon.Beacon</code> instance of the
      *                                  beacon seen
-     * @param beaconData                <code>org.altbeacon.beacon.BeaconData</code> holds the
-     *                                  attributes set in the kit for the <code>beacon</code>
      */
-    private void displayBeacon(Beacon beacon, BeaconData beaconData) {
-        if (mainActivity == null || beacon == null || beaconData == null) return;
+    private void displayBeacon(ProximityKitBeacon beacon) {
+        if (mainActivity == null || beacon == null) return;
 
         // We could instead call beacon.toString() which wraps up the identifiers
         String displayString = beacon.getId1() + " " +
                 beacon.getId2().toInt() + " " + beacon.getId3().toInt() +
-                "\nWelcome message: " + beaconData.get("welcomeMessage");
+                "\nWelcome message: " + beacon.getAttributes().get("welcomeMessage");
 
         // We've elected to notify our only view of the beacon and a message to display
         mainActivity.displayTableRow(beacon, displayString, true);

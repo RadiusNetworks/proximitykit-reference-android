@@ -222,7 +222,7 @@ public class AndroidProximityKitReferenceApplication
 
     @Override
     /**
-     * Called whenever the Proximity Kit manager registered beacons.
+     * Called whenever the Proximity Kit manager sees a registered beacon.
      *
      * @param beacons   a collection of <code>ProximityKitBeacon</code> instances seen in the most
      *                  recent ranging cycle.

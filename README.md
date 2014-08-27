@@ -8,6 +8,8 @@ for demonstration purposes and is not meant to be a fully feature application.
 
 ### Android Studio
 
+This project builds with Android Studio 0.8.6 with Gradle 1.12
+
 1. Clone the repo
 
   ```console

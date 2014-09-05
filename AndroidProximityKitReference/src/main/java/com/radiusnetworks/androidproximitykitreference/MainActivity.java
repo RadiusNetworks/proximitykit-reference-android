@@ -6,7 +6,7 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import org.altbeacon.beacon.Beacon;
+import com.radiusnetworks.proximity.ProximityKitBeacon;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +22,7 @@ public class MainActivity extends ActionBarActivity {
         ((AndroidProximityKitReferenceApplication) getApplication()).setMainActivity(this);
     }
 
-    public void displayTableRow(final Beacon beacon, final String displayString, final boolean updateIfExists) {
+    public void displayTableRow(final ProximityKitBeacon beacon, final String displayString, final boolean updateIfExists) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

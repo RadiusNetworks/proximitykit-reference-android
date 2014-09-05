@@ -9,20 +9,17 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.radiusnetworks.proximity.ProximityKitBeacon;
+import com.radiusnetworks.proximity.ProximityKitBeaconRegion;
 import com.radiusnetworks.proximity.ProximityKitGeofenceNotifier;
 import com.radiusnetworks.proximity.ProximityKitGeofenceRegion;
 import com.radiusnetworks.proximity.ProximityKitManager;
 import com.radiusnetworks.proximity.ProximityKitMonitorNotifier;
 import com.radiusnetworks.proximity.ProximityKitRangeNotifier;
 import com.radiusnetworks.proximity.ProximityKitSyncNotifier;
-import com.radiusnetworks.proximity.ProximityKitBeacon;
-import com.radiusnetworks.proximity.ProximityKitBeaconRegion;
 import com.radiusnetworks.proximity.geofence.GooglePlayServicesException;
 import com.radiusnetworks.proximity.model.KitBeacon;
 import com.radiusnetworks.proximity.model.KitOverlay;
-
-import org.altbeacon.beacon.MonitorNotifier;
-import org.altbeacon.beacon.Region;
 
 import java.util.Collection;
 
@@ -177,7 +174,6 @@ public class AndroidProximityKitReferenceApplication
     public void didSync() {
         Log.d(TAG, "didSync(): Sycn'd with server");
 
-
         // Access every beacon configured in the kit, printing out the value of an attribute
         // named "myKey"
         for (KitBeacon beacon : pkManager.getKit().getBeacons()) {
@@ -222,7 +218,7 @@ public class AndroidProximityKitReferenceApplication
 
     @Override
     /**
-     * Called whenever the Proximity Kit manager sees a registered beacon.
+     * Called whenever the Proximity Kit manager sees registered beacons.
      *
      * @param beacons   a collection of <code>ProximityKitBeacon</code> instances seen in the most
      *                  recent ranging cycle.
@@ -230,8 +226,9 @@ public class AndroidProximityKitReferenceApplication
      *                  ranging for these beacons.
      */
     public void didRangeBeaconsInRegion(Collection<ProximityKitBeacon> beacons, ProximityKitBeaconRegion region) {
-        Log.d(TAG, "didRangeBeaconsInRegion: size="+beacons.size());
-        for (ProximityKitBeacon beacon: beacons) {
+        Log.d(TAG, "didRangeBeaconsInRegion: size=" + beacons.size() + " region=" + region);
+
+        for (ProximityKitBeacon beacon : beacons) {
             Log.d(
                     TAG,
                     "I have a beacon with data: " + beacon + " welcomeMessage=" +
@@ -241,7 +238,6 @@ public class AndroidProximityKitReferenceApplication
             // We've wrapped up further behavior in some internal helper methods
             // Check their docs for details on additional things which you can do we beacon data
             displayBeacon(beacon);
-
         }
     }
 
@@ -256,15 +252,19 @@ public class AndroidProximityKitReferenceApplication
 
     @Override
     /**
-     * Called when at least one beacon in a <code>Region</code> is visible.
+     * Called when at least one beacon in a <code>ProximityKitBeaconRegion</code> is visible.
      *
-     * @param region    an <code>org.altbeacon.beacon.Region</code> which defines the criteria of
+     * @param region    an <code>ProximityKitBeaconRegion</code> which defines the criteria of
      *                  beacons being monitored
      */
     public void didEnterRegion(ProximityKitBeaconRegion region) {
         // In this example, this class sends a notification to the user whenever an beacon
         // matching a Region (defined above) are first seen.
-        Log.d(TAG, "ENTER beacon region: " + region + " " + region.getAttributes().get("welcomeMessage"));
+        Log.d(
+                TAG,
+                "ENTER beacon region: " + region + " " +
+                        region.getAttributes().get("welcomeMessage")
+        );
 
         // Attempt to open the app now that we've entered a region if we started in the background
         tryAutoLaunch();
@@ -275,9 +275,9 @@ public class AndroidProximityKitReferenceApplication
 
     @Override
     /**
-     * Called when no more beacons in a <code>Region</code> are visible.
+     * Called when no more beacons in a <code>ProximityKitBeaconRegion</code> are visible.
      *
-     * @param region    an <code>org.altbeacon.beacon.Region</code> that defines the criteria of
+     * @param region    an <code>ProximityKitBeaconRegion</code> that defines the criteria of
      *                  beacons being monitored
      */
     public void didExitRegion(ProximityKitBeaconRegion region) {
@@ -288,24 +288,24 @@ public class AndroidProximityKitReferenceApplication
     /**
      * Called when a the state of a <code>Region</code> changes.
      *
-     * @param state     set to <code>MonitorNotifier.INSIDE</code> when at least one beacon in a
-     *                  <code>org.altbeacon.beacon.Region</code> is now visible; set to
-     *                  <code>MonitorNotifier.OUTSIDE</code> when no more beacons in the
-     *                  <code>Region</code> are visible
-     * @param region    an <code>org.altbeacon.beacon.Region</code> that defines the criteria of
+     * @param state     set to <code>ProximityKitMonitorNotifier.INSIDE</code> when at least one
+     *                  beacon in a <code>ProximityKitBeaconRegion</code> is now visible; set to
+     *                  <code>ProximityKitMonitorNotifier.OUTSIDE</code> when no more beacons in the
+     *                  <code>ProximityKitBeaconRegion</code> are visible
+     * @param region    an <code>ProximityKitBeaconRegion</code> that defines the criteria of
      *                  beacons being monitored
      */
     public void didDetermineStateForRegion(int state, ProximityKitBeaconRegion region) {
         Log.d(TAG, "didDeterineStateForRegion called with region: " + region);
 
         switch (state) {
-            case MonitorNotifier.INSIDE:
+            case ProximityKitMonitorNotifier.INSIDE:
                 String welcomeMessage = region.getAttributes().get("welcomeMessage");
                 if (welcomeMessage != null) {
                     Log.d(TAG, "Beacon " + region + " says: " + welcomeMessage);
                 }
                 break;
-            case MonitorNotifier.OUTSIDE:
+            case ProximityKitMonitorNotifier.OUTSIDE:
                 String goodbyeMessage = region.getAttributes().get("goodbyeMessage");
                 if (goodbyeMessage != null) {
                     Log.d(TAG, "Beacon " + region + " says: " + goodbyeMessage);
@@ -328,7 +328,7 @@ public class AndroidProximityKitReferenceApplication
 
     @Override
     /**
-     * Called when a <>Geofence</code> is visible.
+     * Called when a <code>Geofence</code> is visible.
      *
      * @param geofence  a <code>ProximityKitGeofenceRegion</code> that defines the criteria of
      *                  Geofence to look for
@@ -455,9 +455,9 @@ public class AndroidProximityKitReferenceApplication
     /**
      * Send a notification stating a beacon is nearby.
      *
-     * @param region    The beacon that was seen.
+     * @param region    The beacon region that was seen.
      */
-    private void sendNotification(Region region) {
+    private void sendNotification(ProximityKitBeaconRegion region) {
         Log.d(TAG, "Sending notification.");
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this)

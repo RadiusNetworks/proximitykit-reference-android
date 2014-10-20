@@ -21,20 +21,10 @@
         android:layout_gravity="center_horizontal">
 
         <TableRow
+            android:id="@+id/beacon_row"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"></TableRow>
-
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
-
-            <TableRow
-                android:id="@+id/beacon_row"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_column="0">
-            </TableRow>
+            android:layout_height="fill_parent"
+            android:layout_column="0">
         </TableRow>
-
     </TableLayout>
 </RelativeLayout>

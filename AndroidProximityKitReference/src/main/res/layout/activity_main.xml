@@ -29,4 +29,12 @@
         </TableRow>
     </TableLayout>
 
+    <Button
+        android:id="@+id/manager_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:onClick="toggleManager"
+        android:text="@string/manager_toggle_start"/>
+
 </LinearLayout>

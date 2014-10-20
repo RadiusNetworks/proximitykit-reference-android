@@ -116,8 +116,33 @@ public class AndroidProximityKitReferenceApplication
         /*
          * Now that we potentially have geofences setup and our notifiers are registered, we are
          * ready to start Proximity Kit.
+         *
+         * We could start it right now with:
+         *
+         *      pkManager.start();
+         *
+         * Instead we are letting the user decide when to start or stop in the UI.
          */
+    }
+
+    /**
+     * Start the Proximity Kit Manager.
+     *
+     * Allows the app to control when the Proximity Kit manager is running. This can similarly used
+     * by libraries to hook into when Proximity Kit manager should run.
+     */
+    public void startManager() {
         pkManager.start();
+    }
+
+    /**
+     * Stop the Proximity Kit Manager.
+     *
+     * Allows the app to control when the Proximity Kit manager is running. This can similarly used
+     * by libraries to hook into when Proximity Kit manager should run.
+     */
+    public void stopManager() {
+        pkManager.stop();
     }
 
     /**

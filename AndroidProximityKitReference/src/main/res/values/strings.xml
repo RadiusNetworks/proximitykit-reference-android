@@ -4,5 +4,7 @@
     <string name="app_name">AndroidProximityKitReference</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="manager_toggle_start">Start</string>
+    <string name="manager_toggle_stop">Stop</string>
 
 </resources>

@@ -1,40 +1,40 @@
-<RelativeLayout android:id="@+id/container"
+<LinearLayout android:id="@+id/container"
                 xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:context=".MainActivity"
-                tools:ignore="MergeRootFrame">
+                tools:ignore="MergeRootFrame"
+                android:orientation="vertical">
 
     <TextView
         android:id="@+id/title"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|top"
-        android:text="Visible Beacons"/>
+        android:text="Seen Beacons"/>
 
     <TableLayout
         android:id="@+id/beacon_table"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_below="@id/title"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:layout_gravity="center_horizontal">
 
         <TableRow
+            android:id="@+id/beacon_row"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"></TableRow>
-
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
-
-            <TableRow
-                android:id="@+id/beacon_row"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_column="0">
-            </TableRow>
+            android:layout_height="fill_parent"
+            android:layout_column="0">
         </TableRow>
-
     </TableLayout>
-</RelativeLayout>
+
+    <Button
+        android:id="@+id/manager_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:onClick="toggleManager"
+        android:text="@string/manager_toggle_start"/>
+
+</LinearLayout>

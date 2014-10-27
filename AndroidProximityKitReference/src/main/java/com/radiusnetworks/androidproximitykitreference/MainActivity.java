@@ -2,6 +2,8 @@ package com.radiusnetworks.androidproximitykitreference;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -14,12 +16,19 @@ import java.util.Map;
 public class MainActivity extends ActionBarActivity {
     public static final String TAG = "MainActivity";
     Map<String, TableRow> rowMap = new HashMap<String, TableRow>();
+    public static boolean isRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ((AndroidProximityKitReferenceApplication) getApplication()).setMainActivity(this);
+        if (isRunning) {
+            startManager();
+        } else {
+            stopManager();
+        }
+
     }
 
     public void displayTableRow(final ProximityKitBeacon beacon, final String displayString, final boolean updateIfExists) {
@@ -47,5 +56,47 @@ public class MainActivity extends ActionBarActivity {
                 tr.addView(textView);
             }
         });
+    }
+
+    /**
+     * Button action which turn the Proximity Kit manager service on and off.
+     *
+     * @param view  button object which was pressed
+     */
+    public void toggleManager(View view) {
+        if (view.getId() != R.id.manager_toggle) { return; }
+
+        if (isRunning) {
+            stopManager();
+            isRunning = false;
+        } else {
+            startManager();
+            isRunning = true;
+        }
+    }
+
+    /**
+     * Turn the Proximity Kit manager on and update the UI accordingly.
+     */
+    private void startManager() {
+        AndroidProximityKitReferenceApplication app = (AndroidProximityKitReferenceApplication) getApplication();
+        Button btn = (Button) findViewById(R.id.manager_toggle);
+
+        app.startManager();
+        btn.setText(R.string.manager_toggle_stop);
+    }
+
+    /**
+     * Turn the Proximity Kit manager off and update the UI accordingly.
+     */
+    private void stopManager() {
+        AndroidProximityKitReferenceApplication app = (AndroidProximityKitReferenceApplication) getApplication();
+        TableLayout table = (TableLayout) findViewById(R.id.beacon_table);
+        Button btn = (Button) findViewById(R.id.manager_toggle);
+
+        app.stopManager();
+        table.removeAllViews();
+        rowMap.clear();
+        btn.setText(R.string.manager_toggle_start);
     }
 }

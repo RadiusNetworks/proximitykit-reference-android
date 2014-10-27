@@ -116,8 +116,33 @@ public class AndroidProximityKitReferenceApplication
         /*
          * Now that we potentially have geofences setup and our notifiers are registered, we are
          * ready to start Proximity Kit.
+         *
+         * We could start it right now with:
+         *
+         *      pkManager.start();
+         *
+         * Instead we are letting the user decide when to start or stop in the UI.
          */
+    }
+
+    /**
+     * Start the Proximity Kit Manager.
+     *
+     * Allows the app to control when the Proximity Kit manager is running. This can similarly used
+     * by libraries to hook into when Proximity Kit manager should run.
+     */
+    public void startManager() {
         pkManager.start();
+    }
+
+    /**
+     * Stop the Proximity Kit Manager.
+     *
+     * Allows the app to control when the Proximity Kit manager is running. This can similarly used
+     * by libraries to hook into when Proximity Kit manager should run.
+     */
+    public void stopManager() {
+        pkManager.stop();
     }
 
     /**
@@ -296,7 +321,7 @@ public class AndroidProximityKitReferenceApplication
      *                  beacons being monitored
      */
     public void didDetermineStateForRegion(int state, ProximityKitBeaconRegion region) {
-        Log.d(TAG, "didDeterineStateForRegion called with region: " + region);
+        Log.d(TAG, "didDeterineStateForRegion called with state: " + state + "\tregion: " + region);
 
         switch (state) {
             case ProximityKitMonitorNotifier.INSIDE:
@@ -382,7 +407,7 @@ public class AndroidProximityKitReferenceApplication
      *                  associated
      */
     public void didDetermineStateForGeofence(int state, ProximityKitGeofenceRegion region) {
-        Log.d(TAG, "didDeterineStateForGeofence called with region: " + region);
+        Log.d(TAG, "didDeterineStateForGeofence called with state: " + state + "\tregion: " + region);
 
         switch (state) {
             case ProximityKitGeofenceNotifier.INSIDE:

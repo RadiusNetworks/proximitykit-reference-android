@@ -321,7 +321,7 @@ public class AndroidProximityKitReferenceApplication
      *                  beacons being monitored
      */
     public void didDetermineStateForRegion(int state, ProximityKitBeaconRegion region) {
-        Log.d(TAG, "didDeterineStateForRegion called with region: " + region);
+        Log.d(TAG, "didDeterineStateForRegion called with state: " + state + "\tregion: " + region);
 
         switch (state) {
             case ProximityKitMonitorNotifier.INSIDE:
@@ -407,7 +407,7 @@ public class AndroidProximityKitReferenceApplication
      *                  associated
      */
     public void didDetermineStateForGeofence(int state, ProximityKitGeofenceRegion region) {
-        Log.d(TAG, "didDeterineStateForGeofence called with region: " + region);
+        Log.d(TAG, "didDeterineStateForGeofence called with state: " + state + "\tregion: " + region);
 
         switch (state) {
             case ProximityKitGeofenceNotifier.INSIDE:

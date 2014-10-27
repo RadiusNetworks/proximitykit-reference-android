@@ -12,7 +12,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|top"
-        android:text="Visible Beacons"/>
+        android:text="Seen Beacons"/>
 
     <TableLayout
         android:id="@+id/beacon_table"

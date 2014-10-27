@@ -96,6 +96,7 @@ public class MainActivity extends ActionBarActivity {
 
         app.stopManager();
         table.removeAllViews();
+        rowMap.clear();
         btn.setText(R.string.manager_toggle_start);
     }
 }

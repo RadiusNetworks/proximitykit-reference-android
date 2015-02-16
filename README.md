@@ -8,7 +8,7 @@ for demonstration purposes and is not meant to be a fully feature application.
 
 ### Android Studio
 
-This project builds with Android Studio 0.8.6 with Gradle 1.12
+This project builds with Android Studio 1.0.1 with Gradle 2.2.1
 
 1. Clone the repo
 

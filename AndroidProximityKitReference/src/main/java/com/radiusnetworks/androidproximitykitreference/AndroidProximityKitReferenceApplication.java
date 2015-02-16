@@ -65,7 +65,9 @@ public class AndroidProximityKitReferenceApplication
         pkManager = ProximityKitManager.getInstanceForApplication(this);
 
         /* ----- begin code only for debugging ---- */
+
         pkManager.debugOn();
+
         /* ----- end code only for debugging ------ */
 
         /*

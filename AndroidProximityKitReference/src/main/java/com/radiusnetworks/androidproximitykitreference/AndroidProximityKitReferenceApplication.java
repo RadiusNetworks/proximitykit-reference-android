@@ -1,5 +1,7 @@
 package com.radiusnetworks.androidproximitykitreference;
 
+import org.altbeacon.beacon.BeaconParser;
+
 import android.app.Application;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -17,6 +19,7 @@ import com.radiusnetworks.proximity.ProximityKitManager;
 import com.radiusnetworks.proximity.ProximityKitMonitorNotifier;
 import com.radiusnetworks.proximity.ProximityKitRangeNotifier;
 import com.radiusnetworks.proximity.ProximityKitSyncNotifier;
+import com.radiusnetworks.proximity.beacon.BeaconManager;
 import com.radiusnetworks.proximity.geofence.GooglePlayServicesException;
 import com.radiusnetworks.proximity.model.KitBeacon;
 import com.radiusnetworks.proximity.model.KitOverlay;
@@ -34,6 +37,7 @@ public class AndroidProximityKitReferenceApplication
 
     private static final String MAIN_OFFICE_LOCATION = "main-office";
     private static final long ONE_DAY_IN_MS = 24 * 60 * 60 * 1000l;
+    private static final int ROLLUP_THRESHOLD = 100;
     public static final String TAG = "AndroidProximityKitReferenceApplication";
 
     private boolean haveDetectedBeaconsSinceBoot = false;
@@ -69,6 +73,33 @@ public class AndroidProximityKitReferenceApplication
         pkManager.debugOn();
 
         /* ----- end code only for debugging ------ */
+
+        /*
+         * All current versions of ProximityKit Android use the AltBeacon/android-beacon-library
+         * under the hood.
+         *
+         * By default only the AltBeacon format is picked up on Android devices. However, we are
+         * free to configure your own custom format by registering a parser with your
+         * ProximityKitManager's BeaconManager.
+         */
+        BeaconManager beaconManager = pkManager.getBeaconManager();
+        beaconManager.getBeaconParsers().add(
+                new BeaconParser().setBeaconLayout(
+                        "m:2-5=c0decafe,i:6-13,i:14-17,p:18-18,d:19-22,d:23-26"
+                                                  )
+                                            );
+
+        /*
+         * Sets the maximum number of regions that may be individually configured in ProximityKit
+         * before the regions will start being automatically combined.  By default,
+         * each beacon or region in the ProximityKit server results in one monitoring and ranging
+         * region.  In cases of large numbers of individual beacons configured on the server,
+         * these beacons will be combined into a smaller number of matching regions for
+         * monitoring and ranging purposes.
+         *
+         * By default, this value is -1, which means that no rollup will occur.
+         */
+        pkManager.setMaxRegionsBeforeRollup(ROLLUP_THRESHOLD);
 
         /*
          * It is our job (the app) to ensure that Google Play services is available. If it is not

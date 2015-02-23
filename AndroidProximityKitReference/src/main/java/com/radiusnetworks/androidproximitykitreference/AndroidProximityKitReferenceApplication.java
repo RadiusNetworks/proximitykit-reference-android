@@ -29,20 +29,20 @@ import java.util.Collection;
 /**
  */
 public class AndroidProximityKitReferenceApplication
-        extends     Application
-        implements  ProximityKitMonitorNotifier,
-                    ProximityKitRangeNotifier,
-                    ProximityKitSyncNotifier,
-                    ProximityKitGeofenceNotifier {
+        extends Application
+        implements ProximityKitMonitorNotifier,
+        ProximityKitRangeNotifier,
+        ProximityKitSyncNotifier,
+        ProximityKitGeofenceNotifier {
 
     private static final String MAIN_OFFICE_LOCATION = "main-office";
-    private static final long ONE_DAY_IN_MS = 24 * 60 * 60 * 1000l;
-    private static final int ROLLUP_THRESHOLD = 100;
-    public static final String TAG = "AndroidProximityKitReferenceApplication";
+    private static final long   ONE_DAY_IN_MS        = 24 * 60 * 60 * 1000l;
+    private static final int ROLLUP_THRESHOLD        = 100;
+    public static final  String TAG                  = "AndroidProximityKitReferenceApplication";
 
-    private boolean haveDetectedBeaconsSinceBoot = false;
-    private MainActivity mainActivity = null;
-    private ProximityKitManager pkManager = null;
+    private boolean             haveDetectedBeaconsSinceBoot = false;
+    private MainActivity        mainActivity                 = null;
+    private ProximityKitManager pkManager                    = null;
 
     @Override
     /**
@@ -160,7 +160,7 @@ public class AndroidProximityKitReferenceApplication
 
     /**
      * Start the Proximity Kit Manager.
-     *
+     * <p/>
      * Allows the app to control when the Proximity Kit manager is running. This can similarly used
      * by libraries to hook into when Proximity Kit manager should run.
      */
@@ -170,7 +170,7 @@ public class AndroidProximityKitReferenceApplication
 
     /**
      * Stop the Proximity Kit Manager.
-     *
+     * <p/>
      * Allows the app to control when the Proximity Kit manager is running. This can similarly used
      * by libraries to hook into when Proximity Kit manager should run.
      */
@@ -180,20 +180,21 @@ public class AndroidProximityKitReferenceApplication
 
     /**
      * Verify that Google Play services is available.
-     *
+     * <p/>
      * If the service is not available it could be due to several reasons. We take the easy way out
      * in this demo and simply log the error. We then use the utility class provided to pop a
      * notification to the end user with the message.
-     *
+     * <p/>
      * Google Play services controls the text and content of this notification. We could roll our
-     * own notification, display a dialog (which would require an Activity context), or do something
+     * own notification, display a dialog (which would require an Activity context), or do
+     * something
      * else. This is why it is our (the app) responsibility to make this decision and not left up
      * to Proximity Kit.
      *
-     * @see <a href="https://developer.android.com/google/play-services/setup.html">
-     *          Setup Google Play services
-     *      </a>
      * @return <code>true</code> if Google Play services is available, otherwise <code>false</code>
+     * @see <a href="https://developer.android.com/google/play-services/setup.html">
+     * Setup Google Play services
+     * </a>
      */
     public boolean servicesConnected() {
         // Check that Google Play services is available
@@ -214,12 +215,12 @@ public class AndroidProximityKitReferenceApplication
     /**
      * Set main activity for app display related callbacks.
      *
-     * @param mainActivity      <code>Activity</code> to send app display related callbacks
+     * @param mainActivity
+     *         <code>Activity</code> to send app display related callbacks
      */
     public void setMainActivity(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
     }
-
 
     /***********************************************************************************************
      * START ProximityKitSyncNotifier
@@ -238,9 +239,9 @@ public class AndroidProximityKitReferenceApplication
             Log.d(
                     TAG,
                     "For beacon: " + beacon.getProximityUuid() + " " + beacon.getMajor() + " " +
-                            beacon.getMinor() + ", the value of myKey is " +
-                            beacon.getAttributes().get("myKey")
-            );
+                            beacon.getMinor() + ", the value of welcomeMessage is " +
+                            beacon.getAttributes().get("welcomeMessage")
+                 );
         }
 
         // Access every geofence configured in the kit, printing out the value of an attribute
@@ -251,7 +252,7 @@ public class AndroidProximityKitReferenceApplication
                     "For geofence: (" + overlay.getLatitude() + ", " + overlay.getLongitude() +
                             ") with radius " + overlay.getRadius() + ", the value of myKey is " +
                             overlay.getAttributes().get("myKey")
-            );
+                 );
         }
     }
 
@@ -269,10 +270,9 @@ public class AndroidProximityKitReferenceApplication
      * END ProximityKitSyncNotifier
      **********************************************************************************************/
 
-
     /***********************************************************************************************
      * START ProximityKitRangeNotifier
-     **********************************************************************************************/
+     * ********************************************************************************************/
 
     @Override
     /**
@@ -284,14 +284,18 @@ public class AndroidProximityKitReferenceApplication
      *                  ranging for these beacons.
      */
     public void didRangeBeaconsInRegion(Collection<ProximityKitBeacon> beacons, ProximityKitBeaconRegion region) {
+        if (beacons.size() == 0) {
+            return;
+        }
+
         Log.d(TAG, "didRangeBeaconsInRegion: size=" + beacons.size() + " region=" + region);
 
         for (ProximityKitBeacon beacon : beacons) {
             Log.d(
                     TAG,
-                    "I have a beacon with data: " + beacon + " welcomeMessage=" +
-                            beacon.getAttributes().get("welcomeMessage")
-            );
+                    "I have a beacon with data: " + beacon + " attributes=" +
+                            beacon.getAttributes()
+                 );
 
             // We've wrapped up further behavior in some internal helper methods
             // Check their docs for details on additional things which you can do we beacon data
@@ -302,7 +306,6 @@ public class AndroidProximityKitReferenceApplication
     /***********************************************************************************************
      * END ProximityKitRangeNotifier
      **********************************************************************************************/
-
 
     /***********************************************************************************************
      * START ProximityKitMonitorNotifier
@@ -322,7 +325,7 @@ public class AndroidProximityKitReferenceApplication
                 TAG,
                 "ENTER beacon region: " + region + " " +
                         region.getAttributes().get("welcomeMessage")
-        );
+             );
 
         // Attempt to open the app now that we've entered a region if we started in the background
         tryAutoLaunch();
@@ -379,7 +382,6 @@ public class AndroidProximityKitReferenceApplication
      * END ProximityKitMonitorNotifier
      **********************************************************************************************/
 
-
     /***********************************************************************************************
      * START ProximityKitGeofenceNotifier
      **********************************************************************************************/
@@ -398,7 +400,7 @@ public class AndroidProximityKitReferenceApplication
                 TAG,
                 "didEnterGeofenceRegion called with region: " + region + " " +
                         region.getAttributes().get("welcomeMessage")
-        );
+             );
 
         // Attempt to open the app now that we've entered a region if we started in the background
         tryAutoLaunch();
@@ -440,7 +442,10 @@ public class AndroidProximityKitReferenceApplication
      *                  associated
      */
     public void didDetermineStateForGeofence(int state, ProximityKitGeofenceRegion region) {
-        Log.d(TAG, "didDeterineStateForGeofence called with state: " + state + "\tregion: " + region);
+        Log.d(
+                TAG,
+                "didDeterineStateForGeofence called with state: " + state + "\tregion: " + region
+             );
 
         switch (state) {
             case ProximityKitGeofenceNotifier.INSIDE:
@@ -458,12 +463,12 @@ public class AndroidProximityKitReferenceApplication
             default:
                 Log.d(TAG, "Received unknown state: " + state);
                 break;
-        }    }
+        }
+    }
 
     /***********************************************************************************************
      * END ProximityKitGeofenceNotifier
      **********************************************************************************************/
-
 
     /***********************************************************************************************
      * START App Helpers
@@ -472,11 +477,14 @@ public class AndroidProximityKitReferenceApplication
     /**
      * App helper method to notify an activity when we see a beacon.
      *
-     * @param beacon                    <code>org.altbeacon.beacon.Beacon</code> instance of the
-     *                                  beacon seen
+     * @param beacon
+     *         <code>org.altbeacon.beacon.Beacon</code> instance of the
+     *         beacon seen
      */
     private void displayBeacon(ProximityKitBeacon beacon) {
-        if (mainActivity == null || beacon == null) return;
+        if (mainActivity == null || beacon == null) {
+            return;
+        }
 
         // We could instead call beacon.toString() which wraps up the identifiers
         String displayString = beacon.getId1() + " " +
@@ -489,7 +497,7 @@ public class AndroidProximityKitReferenceApplication
 
     /**
      * App helper method to force Proximity Kit to sync.
-     *
+     * <p/>
      * The Proximity Kit manager should automatically sync every hour, however, we can force an
      * ad-hoc sync anytime we want. This demonstrates how to do that.
      */
@@ -501,10 +509,13 @@ public class AndroidProximityKitReferenceApplication
     /**
      * Generate a consistent ID string given three identifier tokens.
      *
-     * @param id1   Identifier token 1
-     * @param id2   Identifier token 2
-     * @param id3   Identifier token 3
-     * @return  An ID string representing the three tokens.
+     * @param id1
+     *         Identifier token 1
+     * @param id2
+     *         Identifier token 2
+     * @param id3
+     *         Identifier token 3
+     * @return An ID string representing the three tokens.
      */
     private String generateId(Object id1, Object id2, Object id3) {
         return id1.toString() + "-" + id2 + "-" + id3;
@@ -513,7 +524,8 @@ public class AndroidProximityKitReferenceApplication
     /**
      * Send a notification stating a beacon is nearby.
      *
-     * @param region    The beacon region that was seen.
+     * @param region
+     *         The beacon region that was seen.
      */
     private void sendNotification(ProximityKitBeaconRegion region) {
         Log.d(TAG, "Sending notification.");
@@ -531,7 +543,8 @@ public class AndroidProximityKitReferenceApplication
     /**
      * Send a notification stating a geofence was entered.
      *
-     * @param region    Geofence which was entered.
+     * @param region
+     *         Geofence which was entered.
      */
     private void sendNotification(ProximityKitGeofenceRegion region) {
         Log.d(TAG, "Sending notification.");
@@ -550,7 +563,9 @@ public class AndroidProximityKitReferenceApplication
      * Attempt to launch the main activity if we were started in the background.
      */
     private void tryAutoLaunch() {
-        if (haveDetectedBeaconsSinceBoot) return;
+        if (haveDetectedBeaconsSinceBoot) {
+            return;
+        }
 
         // If we were started in the background for some reason
         Log.d(TAG, "auto launching MainActivity");

@@ -1,3 +1,9 @@
+Development
+-----------
+
+- TBD
+
+
 Version 1.1.1
 -------------
 
@@ -5,6 +11,7 @@ Bug Fixes:
 
 - Update to Proximity Kit for Android 0.3.1. This includes a bug fix to remove
   the static compiled 'support-v4' library
+
 
 Version 1.1.0
 -------------

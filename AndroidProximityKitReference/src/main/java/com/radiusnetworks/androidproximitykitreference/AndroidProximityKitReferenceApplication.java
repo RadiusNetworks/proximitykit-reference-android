@@ -1,11 +1,12 @@
 package com.radiusnetworks.androidproximitykitreference;
 
-import org.altbeacon.beacon.BeaconParser;
-
+import android.app.AlertDialog;
 import android.app.Application;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -24,6 +25,8 @@ import com.radiusnetworks.proximity.geofence.GooglePlayServicesException;
 import com.radiusnetworks.proximity.model.KitBeacon;
 import com.radiusnetworks.proximity.model.KitOverlay;
 
+import org.altbeacon.beacon.BeaconParser;
+
 import java.util.Collection;
 
 /**
@@ -38,7 +41,7 @@ public class AndroidProximityKitReferenceApplication
     private static final String MAIN_OFFICE_LOCATION = "main-office";
     private static final long   ONE_DAY_IN_MS        = 24 * 60 * 60 * 1000l;
     private static final int ROLLUP_THRESHOLD        = 100;
-    public static final  String TAG                  = "AndroidProximityKitReferenceApplication";
+    public static final  String TAG                  = "PKReferenceApplication";
 
     private boolean             haveDetectedBeaconsSinceBoot = false;
     private MainActivity        mainActivity                 = null;
@@ -78,7 +81,7 @@ public class AndroidProximityKitReferenceApplication
          * All current versions of ProximityKit Android use the AltBeacon/android-beacon-library
          * under the hood.
          *
-         * By default only the AltBeacon format is picked up on Android devices. However, we are
+         * By default only the AltBeacon format is picked up on Android devices. However, you are
          * free to configure your own custom format by registering a parser with your
          * ProximityKitManager's BeaconManager.
          */
@@ -86,8 +89,8 @@ public class AndroidProximityKitReferenceApplication
         beaconManager.getBeaconParsers().add(
                 new BeaconParser().setBeaconLayout(
                         "m:2-5=c0decafe,i:6-13,i:14-17,p:18-18,d:19-22,d:23-26"
-                                                  )
-                                            );
+                )
+        );
 
         /*
          * Sets the maximum number of regions that may be individually configured in ProximityKit
@@ -126,7 +129,13 @@ public class AndroidProximityKitReferenceApplication
             try {
                 pkManager.enableGeofences();
 
-                // No point setting the geofence notifier if we aren't using geofences
+                /*
+                 * No point setting the geofence notifier if we aren't using geofences.
+                 *
+                 * This should be set prior to calling `start()` on the manager. If the notifier
+                 * is set after calling `start()`, it is possible some notifications will be missed
+                 * during that window.
+                 */
                 pkManager.setProximityKitGeofenceNotifier(this);
             } catch (GooglePlayServicesException e) {
                 Log.e(TAG, e.getMessage());
@@ -200,16 +209,36 @@ public class AndroidProximityKitReferenceApplication
         // Check that Google Play services is available
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
 
-        if (ConnectionResult.SUCCESS != resultCode) {
-            // Taking the easy way out log it, then let Google Play pop the appropriate notification
-            Log.w(TAG, GooglePlayServicesUtil.getErrorString(resultCode));
-            GooglePlayServicesUtil.showErrorNotification(resultCode, this);
-
-            return false;
+        if (ConnectionResult.SUCCESS == resultCode) {
+            Log.d(TAG, "Google Play services available");
+            return true;
         }
 
-        Log.d(TAG, "Google Play services available");
-        return true;
+        // Taking the easy way out: log it. Then let Google Play generate the appropriate action
+        Log.w(TAG, GooglePlayServicesUtil.getErrorString(resultCode));
+        PendingIntent nextAction = GooglePlayServicesUtil.getErrorPendingIntent(
+                resultCode,
+                this,
+                0
+        );
+
+        // Make sure we have something to do
+        if (nextAction == null) {
+            Log.e(TAG, "Unable to determine action to handle Google Play Services error.");
+        }
+
+        // This isn't a crash worthy event
+        try {
+            nextAction.send(this, 0, new Intent());
+        } catch (PendingIntent.CanceledException e) {
+            Log.w(TAG, "Intent was canceled after we sent it.");
+        } catch (NullPointerException npe) {
+            // Likely on a mod without Google Play but log the exception to be safe
+            Log.e(TAG, "Error occurred when trying to retrieve to Google Play Services.");
+            npe.printStackTrace();
+            displayFallbackGooglePlayDialog(resultCode);
+        }
+        return false;
     }
 
     /**
@@ -241,7 +270,7 @@ public class AndroidProximityKitReferenceApplication
                     "For beacon: " + beacon.getProximityUuid() + " " + beacon.getMajor() + " " +
                             beacon.getMinor() + ", the value of welcomeMessage is " +
                             beacon.getAttributes().get("welcomeMessage")
-                 );
+            );
         }
 
         // Access every geofence configured in the kit, printing out the value of an attribute
@@ -252,7 +281,7 @@ public class AndroidProximityKitReferenceApplication
                     "For geofence: (" + overlay.getLatitude() + ", " + overlay.getLongitude() +
                             ") with radius " + overlay.getRadius() + ", the value of myKey is " +
                             overlay.getAttributes().get("myKey")
-                 );
+            );
         }
     }
 
@@ -295,7 +324,7 @@ public class AndroidProximityKitReferenceApplication
                     TAG,
                     "I have a beacon with data: " + beacon + " attributes=" +
                             beacon.getAttributes()
-                 );
+            );
 
             // We've wrapped up further behavior in some internal helper methods
             // Check their docs for details on additional things which you can do we beacon data
@@ -325,7 +354,7 @@ public class AndroidProximityKitReferenceApplication
                 TAG,
                 "ENTER beacon region: " + region + " " +
                         region.getAttributes().get("welcomeMessage")
-             );
+        );
 
         // Attempt to open the app now that we've entered a region if we started in the background
         tryAutoLaunch();
@@ -400,13 +429,14 @@ public class AndroidProximityKitReferenceApplication
                 TAG,
                 "didEnterGeofenceRegion called with region: " + region + " " +
                         region.getAttributes().get("welcomeMessage")
-             );
+        );
 
         // Attempt to open the app now that we've entered a region if we started in the background
         tryAutoLaunch();
 
         // Notify the user that we've seen a geofence
         sendNotification(region);
+
 
         // Force a sync if we enter the main office so we ensure we have the latest data.
         // We wouldn't want the boss to think we weren't working ┌( ಠ_ಠ)┘
@@ -445,20 +475,18 @@ public class AndroidProximityKitReferenceApplication
         Log.d(
                 TAG,
                 "didDeterineStateForGeofence called with state: " + state + "\tregion: " + region
-             );
+        );
 
         switch (state) {
             case ProximityKitGeofenceNotifier.INSIDE:
-                String welcomeMessage = region.getAttributes().get("welcomeMessage");
-                if (welcomeMessage != null) {
-                    Log.d(TAG, "Geofence " + region + " says: " + welcomeMessage);
-                }
+                // We've wrapped up further behavior in some internal helper methods
+                // Check their docs for details on additional things which you can do we beacon data
+                displayGeofence(region, "Welcome!");
                 break;
             case ProximityKitGeofenceNotifier.OUTSIDE:
-                String goodbyeMessage = region.getAttributes().get("goodbyeMessage");
-                if (goodbyeMessage != null) {
-                    Log.d(TAG, "Geofence " + region + " says: " + goodbyeMessage);
-                }
+                // We've wrapped up further behavior in some internal helper methods
+                // Check their docs for details on additional things which you can do we beacon data
+                displayGeofence(region, "Goodbye!");
                 break;
             default:
                 Log.d(TAG, "Received unknown state: " + state);
@@ -493,6 +521,92 @@ public class AndroidProximityKitReferenceApplication
 
         // We've elected to notify our only view of the beacon and a message to display
         mainActivity.displayTableRow(beacon, displayString, true);
+    }
+
+    /**
+     * Displays an error dialog to the user.
+     * <p/>
+     * This manually attempts to display a dialog to the user. This is a fallback strategy if we
+     * were unsuccessful using the pending intent. This may happen on rooted and modded phones
+     * which cause exceptions when attempting to open the play store.
+     * <p/>
+     * If we are unable to display the activity now, because the main activity has not been created,
+     * we delay and try again in one second. As soon as there is an activity we stop any more
+     * attempt to display the error.
+     *
+     * @param resultCode    The code to provide to <code>GooglePlayServicesUtil</code> to tell it
+     *                      which dialog message is needed.
+     */
+    private void displayFallbackGooglePlayDialog(final int resultCode) {
+        final Handler handler = new Handler();
+        final long oneSecond = 1000;
+
+        Runnable runnable = new Runnable() {
+            public void run() {
+                if (mainActivity == null) {
+                    handler.postDelayed(this, oneSecond);
+                    return;
+                }
+                displayGooglePlayErrorDialog(resultCode);
+            }
+        };
+        handler.post(runnable);
+    }
+
+    /**
+     * App helper method to notify an activity when we see a geofence.
+     *
+     * @param geofence  <code>ProximityKitGeofenceRegion</code> instance of the seen
+     * @param message   Custom message associated with the geofence
+     */
+    private void displayGeofence(ProximityKitGeofenceRegion geofence, String message) {
+        if (mainActivity == null || geofence == null) {
+            return;
+        }
+
+        // Build our message to display
+        StringBuilder displayString = new StringBuilder();
+        displayString.append("Geofence at (");
+        displayString.append(geofence.getLatitude());
+        displayString.append(", ");
+        displayString.append(geofence.getLongitude());
+        displayString.append(") with radius ");
+        displayString.append(geofence.getRadius());
+        displayString.append("says: \"");
+        displayString.append(message);
+        displayString.append(("\""));
+
+        // We've elected to notify our only view of the beacon and a message to display
+        mainActivity.displayTableRow(geofence, displayString.toString(), true);
+    }
+
+    /**
+     * Display a dialog to the user explaining a Google Play service error.
+     * <p/>
+     * If there is no main activity for us to attach to we simply return. Otherwise, we try to get
+     * the error dialog from <code>GooglePlayServiceUtil</code> so it can properly provide a
+     * consistent experience for the user.
+     * <p/>
+     * If this fails, such as the device is a modded phone, we simply notify the user via a standard
+     * dialog alert.
+     *
+     * @param resultCode    The code to provide to <code>GooglePlayServicesUtil</code> to tell it
+     *                      which dialog message is needed.
+     */
+    private void displayGooglePlayErrorDialog(int resultCode){
+        if (mainActivity == null) {
+            return;
+        }
+
+        try {
+            GooglePlayServicesUtil.getErrorDialog(resultCode, mainActivity, 0).show();
+        } catch (Exception e) {
+            //last resort
+            new AlertDialog.Builder(mainActivity)
+                    .setTitle("Missing Google Play Services")
+                    .setMessage("Please visit the Google Play Store and install Google Play Services.")
+                    .show();
+        }
     }
 
     /**

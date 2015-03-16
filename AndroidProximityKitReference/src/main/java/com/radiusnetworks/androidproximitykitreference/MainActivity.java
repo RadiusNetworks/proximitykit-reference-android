@@ -9,6 +9,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.radiusnetworks.proximity.ProximityKitBeacon;
+import com.radiusnetworks.proximity.ProximityKitGeofenceRegion;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +58,31 @@ public class MainActivity extends ActionBarActivity {
             }
         });
     }
+    public void displayTableRow(final ProximityKitGeofenceRegion geofence, final String displayString, final boolean updateIfExists) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TableLayout table = (TableLayout) findViewById(R.id.beacon_table);
 
+                String key = geofence.getRequestId();
+                TableRow tr = (TableRow) rowMap.get(key);
+                if (tr == null) {
+                    tr = new TableRow(MainActivity.this);
+                    tr.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT));
+                    rowMap.put(key, tr);
+                    table.addView(tr);
+                } else {
+                    if (updateIfExists == false) {
+                        return;
+                    }
+                }
+                tr.removeAllViews();
+                TextView textView = new TextView(MainActivity.this);
+                textView.setText(displayString);
+                tr.addView(textView);
+            }
+        });
+    }
     /**
      * Button action which turn the Proximity Kit manager service on and off.
      *

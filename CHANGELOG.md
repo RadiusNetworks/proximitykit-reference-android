@@ -4,6 +4,22 @@ Development
 - TBD
 
 
+Version 1.2.0
+-------------
+
+Enhancements:
+
+- Update to Proximity Kit for Android 0.4.0
+
+  This includes support for Google Play Services 6.1 and 6.5. It also supports
+  Android SDK 21.
+
+Bug Fixes:
+
+- Fix the Google Play Services error dialog to properly work with Google Play
+  Services 4.2, 4.3, and modded phones without the Play Store.
+
+
 Version 1.1.1
 -------------
 

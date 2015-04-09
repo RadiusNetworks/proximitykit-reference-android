@@ -1,7 +1,9 @@
-Development
------------
+Version 1.3.0
+-------------
 
-- TBD
+Enhancements:
+
+- Remove use of region rollup config setting, as it has been deprecated
 
 
 Version 1.2.0

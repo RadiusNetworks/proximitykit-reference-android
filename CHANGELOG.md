@@ -1,7 +1,7 @@
 Development
 -----------
 
-- Update to Proximity Kit for Android 0.6.0
+- Update to Proximity Kit for Android 0.6.1
 
 
 Version 1.3.0

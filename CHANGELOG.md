@@ -1,8 +1,17 @@
-Development
+Version 1.4.0
 -----------
 
-- Update to Proximity Kit for Android 0.7.0
+Enhancements:
+- Add Android 6.0 permissions check
 
+  This is needed to get location permission to scan for beacons if on a
+  device with SDK 23+
+
+- Update to Proximity Kit for Android 0.9.0
+
+  Includes support for doing extra server syncs on power connection to
+  work around restricted network access for apps in AppStandby mode on
+  Android 6.0+
 
 Version 1.3.2
 -------------

@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.radiusnetworks.proximity.KitConfig;
 import com.radiusnetworks.proximity.ProximityKitBeacon;
 import com.radiusnetworks.proximity.ProximityKitBeaconRegion;
 import com.radiusnetworks.proximity.ProximityKitGeofenceNotifier;
@@ -27,7 +28,9 @@ import com.radiusnetworks.proximity.model.KitOverlay;
 
 import org.altbeacon.beacon.BeaconParser;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  */
@@ -37,14 +40,35 @@ public class AndroidProximityKitReferenceApplication
         ProximityKitRangeNotifier,
         ProximityKitSyncNotifier,
         ProximityKitGeofenceNotifier {
-
+    /**
+     * Custom metadata key specific to the associated kit
+     */
     private static final String MAIN_OFFICE_LOCATION = "main-office";
-    private static final long   ONE_DAY_IN_MS        = 24 * 60 * 60 * 1000l;
-    public static final  String TAG                  = "PKReferenceApplication";
 
-    private boolean             haveDetectedBeaconsSinceBoot = false;
-    private MainActivity        mainActivity                 = null;
-    private ProximityKitManager pkManager                    = null;
+    /**
+     * General logging tag
+     */
+    public static final String TAG = "PKReferenceApplication";
+
+    /**
+     * Singleton storage for an instance of the manager
+     */
+    private static ProximityKitManager pkManager = null;
+
+    /**
+     * Object to use as a thread-safe lock
+     */
+    private static final Object pkManagerLock = new Object();
+
+    /**
+     * Flag for tracking if the app was started in the background.
+     */
+    private boolean haveDetectedBeaconsSinceBoot = false;
+
+    /**
+     * Reference to the main activity - used in callbacks
+     */
+    private MainActivity mainActivity = null;
 
     @Override
     /**
@@ -67,8 +91,19 @@ public class AndroidProximityKitReferenceApplication
         super.onCreate();
         Log.d(TAG, "onCreate() called");
 
-        // Hold a reference to the Proximity Kit manager to access the kit later
-        pkManager = ProximityKitManager.getInstanceForApplication(this);
+        /*
+         * The app is responsible for handling the singleton instance of the Proximity Kit manager.
+         * To ensure we have a single instance we synchronize our creation process.
+         *
+         * While this is not necessary inside an `Application` subclass it is necessary if the
+         * single manager instance is created inside an `Activity` or other Android/Java component.
+         * We're including the pattern here to show a method of ensuring a singleton instance.
+         */
+        synchronized (pkManagerLock) {
+            if (pkManager == null) {
+                pkManager = ProximityKitManager.getInstance(this, loadConfig());
+            }
+        }
 
         /* ----- begin code only for debugging ---- */
 
@@ -620,6 +655,59 @@ public class AndroidProximityKitReferenceApplication
      */
     private String generateId(Object id1, Object id2, Object id3) {
         return id1.toString() + "-" + id2 + "-" + id3;
+    }
+
+    /**
+     * Generate the app's Proximity Kit configuration.
+     * <p/>
+     * This loads the properties for a kit from a {@code .properties} file bundled in the app. This
+     * file was be downloaded from the <a href="https://proximitykit.radiusnetworks.com">Proximity
+     * Kit server</a>.
+     * <p/>
+     * For newer Android applications, the file can be added to the {@code /assets} folder:
+     * <p/>
+     * <pre>
+     * {@code Properties properties = new Properties();
+     * try {
+     *     properties.load(getAssets().open("ProximityKit.properties"));
+     * } catch (IOException e) {
+     *     throw new IllegalStateException("Unable to load properties file!", e);
+     * }
+     * new Configuration(properties);
+     * }
+     * </pre>
+     * <p/>
+     * For older Android applications, or if you just prefer using Java resources, the file can be
+     * added to the {@code /resources} folder:
+     * <p/>
+     * <pre>
+     * {@code Properties properties = new Properties();
+     * InputStream in = getClassLoader().getResourceAsStream("ProximityKit.properties");
+     * if (in == null) {
+     *     throw new IllegalStateException("Unable to find ProximityKit.properties files");
+     * }
+     * try {
+     *     properties.load(in);
+     * } catch (IOException e) {
+     *     throw new IllegalStateException("Unable to load properties file!", e);
+     * }
+     * new Configuration(properties);
+     * }
+     * </pre>
+     * <p/>
+     * These details could just as easily been statically compiled into the app. They also could
+     * have been downloaded from a 3rd party server.
+     *
+     * @return A new {@link KitConfig} configured for the app's kit.
+     */
+    private KitConfig loadConfig() {
+        Properties properties = new Properties();
+        try {
+            properties.load(getAssets().open("ProximityKit.properties"));
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to load properties file!", e);
+        }
+        return new KitConfig(properties);
     }
 
     /**

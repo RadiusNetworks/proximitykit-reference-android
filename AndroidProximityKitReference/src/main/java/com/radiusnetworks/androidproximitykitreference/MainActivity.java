@@ -39,21 +39,23 @@ public class MainActivity extends ActionBarActivity {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android M Permission check
-            if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("This app needs location access");
                 builder.setMessage("Please grant location access so this app can detect beacons in the background.");
                 builder.setPositiveButton(android.R.string.ok, null);
-                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-
-                    @TargetApi(23)
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                PERMISSION_REQUEST_FINE_LOCATION);
-                    }
-
-                });
+                builder.setOnDismissListener(
+                        new DialogInterface.OnDismissListener() {
+                            @TargetApi(23)
+                            @Override
+                            public void onDismiss(DialogInterface dialogInterface) {
+                                requestPermissions(
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        PERMISSION_REQUEST_FINE_LOCATION
+                                );
+                            }
+                        }
+                );
                 builder.show();
             }
         }
@@ -61,8 +63,7 @@ public class MainActivity extends ActionBarActivity {
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case PERMISSION_REQUEST_FINE_LOCATION: {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -73,11 +74,9 @@ public class MainActivity extends ActionBarActivity {
                     builder.setMessage("Since location access has not been granted, this app will not be able to discover beacons when in the background.");
                     builder.setPositiveButton(android.R.string.ok, null);
                     builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-
                         @Override
                         public void onDismiss(DialogInterface dialog) {
                         }
-
                     });
                     builder.show();
                 }

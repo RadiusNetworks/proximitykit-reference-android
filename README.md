@@ -31,10 +31,6 @@ This project builds with Android Studio 1.0.1 with Gradle 2.2.1
 
 5. Connect a device and run the app.
 
-### Eclipse
-
-TBD
-
 ## Usage
 
 The app runs and works. Hooray!!! However, you don't use any of our sample

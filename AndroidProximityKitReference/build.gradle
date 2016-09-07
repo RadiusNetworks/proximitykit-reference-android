@@ -1,15 +1,11 @@
 buildscript {
-    repositories {
-        mavenCentral()
-    }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.1.2'
     }
 }
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 
 repositories {
-    mavenCentral()
     flatDir {
         dirs 'libs'
     }
@@ -24,8 +20,8 @@ android {
         minSdkVersion 9
         // targetSdkVersion 19
         targetSdkVersion 23
-        versionCode 8
-        versionName '1.4.0'
+        versionCode 9
+        versionName '1.5.0'
     }
 
     buildTypes {
@@ -46,12 +42,11 @@ android {
 
 dependencies {
     // Use version 19 for 5.0.+ and below.  Also requires commenting out portions of Main Activity
-    compile('com.radiusnetworks:proximitykit-android-0.12.0-pre.2@aar')
+    compile('com.radiusnetworks:proximitykit-android-0.12.0@aar')
     // compile 'com.google.android.gms:play-services:4.4.52’
     // compile 'com.google.android.gms:play-services:5.0.+'
     // compile 'com.google.android.gms:play-services-location:7.8.+'
     compile 'com.google.android.gms:play-services:9.4.0'
     // compile 'com.android.support:appcompat-v7:19.+'
     compile 'com.android.support:appcompat-v7:23.0.1'
-
 }

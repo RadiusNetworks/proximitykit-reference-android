@@ -6,6 +6,19 @@
 
     <uses-sdk tools:overrideLibrary="com.google.android.gms" />
 
+    <!-- minimum permissions for BLE beacons -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <!-- BLE background detection requires some permissions (these are runtime in Android 6) - uncomment this if you are not using Geofences -->
+    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
+
+    <!-- geofence usage requires some permissions (these are runtime in Android 6) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- necessary for syncing with the servers -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name="com.radiusnetworks.androidproximitykitreference.AndroidProximityKitReferenceApplication"
         android:allowBackup="true"

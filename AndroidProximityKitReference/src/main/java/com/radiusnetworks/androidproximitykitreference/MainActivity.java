@@ -37,6 +37,7 @@ public class MainActivity extends ActionBarActivity {
         } else {
             stopManager();
         }
+        //for Version 19 comment out from ==================000 HERE 000==================
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android M Permission check
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -59,8 +60,10 @@ public class MainActivity extends ActionBarActivity {
                 builder.show();
             }
         }
+        // to ==================000 HERE 000==================
     }
 
+    //For Version 19 comment out from ==================000 HERE 000==================
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -84,6 +87,7 @@ public class MainActivity extends ActionBarActivity {
             }
         }
     }
+    // to ==================000 HERE 000==================
 
 
     public void displayTableRow(final ProximityKitBeacon beacon, final String displayString, final boolean updateIfExists) {

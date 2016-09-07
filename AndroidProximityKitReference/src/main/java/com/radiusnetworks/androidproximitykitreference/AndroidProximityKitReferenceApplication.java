@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -21,18 +22,22 @@ import com.radiusnetworks.proximity.ProximityKitManager;
 import com.radiusnetworks.proximity.ProximityKitMonitorNotifier;
 import com.radiusnetworks.proximity.ProximityKitRangeNotifier;
 import com.radiusnetworks.proximity.ProximityKitSyncNotifier;
-import com.radiusnetworks.proximity.beacon.BeaconManager;
 import com.radiusnetworks.proximity.geofence.GooglePlayServicesException;
 import com.radiusnetworks.proximity.model.KitBeacon;
 import com.radiusnetworks.proximity.model.KitOverlay;
 
-import org.altbeacon.beacon.BeaconParser;
-
-import java.io.IOException;
 import java.util.Collection;
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
+ * The {@link Application} class for the Campaign Kit Demo Client.
+ * <p/>
+ * This can be a good place to interact with Proximity Kit due to a single instance being created
+ * for the lifetime of the app. Additionally, the {@link android.app.Activity Activity} classes have
+ * access to this instance as well.
+ *
+ * @see {@link ProximityKitManager}
  */
 public class AndroidProximityKitReferenceApplication
         extends Application
@@ -43,22 +48,30 @@ public class AndroidProximityKitReferenceApplication
     /**
      * Custom metadata key specific to the associated kit
      */
+    @NonNull
     private static final String MAIN_OFFICE_LOCATION = "main-office";
 
     /**
      * General logging tag
      */
-    public static final String TAG = "PKReferenceApplication";
+    private static final String TAG = "PKReferenceApplication";
 
     /**
      * Singleton storage for an instance of the manager
      */
-    private static ProximityKitManager pkManager = null;
+    private static volatile ProximityKitManager pkManager;
 
     /**
      * Object to use as a thread-safe lock
      */
-    private static final Object pkManagerLock = new Object();
+    @NonNull
+    private static final Object SHARED_LOCK = new Object();
+
+    /**
+     * Proximity Kit Configuration
+     */
+    @NonNull
+    private static final KitConfig KIT_CONFIG = new KitConfig(loadConfig());
 
     /**
      * Flag for tracking if the app was started in the background.
@@ -89,7 +102,6 @@ public class AndroidProximityKitReferenceApplication
      */
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate() called");
 
         /*
          * The app is responsible for handling the singleton instance of the Proximity Kit manager.
@@ -99,9 +111,11 @@ public class AndroidProximityKitReferenceApplication
          * single manager instance is created inside an `Activity` or other Android/Java component.
          * We're including the pattern here to show a method of ensuring a singleton instance.
          */
-        synchronized (pkManagerLock) {
-            if (pkManager == null) {
-                pkManager = ProximityKitManager.getInstance(this, loadConfig());
+        if (null == pkManager) {
+            synchronized (SHARED_LOCK) {
+                if (null == pkManager) {
+                    pkManager = ProximityKitManager.getInstance(this, KIT_CONFIG);
+                }
             }
         }
 
@@ -110,21 +124,6 @@ public class AndroidProximityKitReferenceApplication
         pkManager.debugOn();
 
         /* ----- end code only for debugging ------ */
-
-        /*
-         * All current versions of ProximityKit Android use the AltBeacon/android-beacon-library
-         * under the hood.
-         *
-         * By default only the AltBeacon format is picked up on Android devices. However, you are
-         * free to configure your own custom format by registering a parser with your
-         * ProximityKitManager's BeaconManager.
-         */
-        BeaconManager beaconManager = pkManager.getBeaconManager();
-        beaconManager.getBeaconParsers().add(
-                new BeaconParser().setBeaconLayout(
-                        "m:2-5=c0decafe,i:6-13,i:14-17,p:18-18,d:19-22,d:23-26"
-                )
-        );
 
         /*
          * It is our job (the app) to ensure that Google Play services is available. If it is not
@@ -282,7 +281,7 @@ public class AndroidProximityKitReferenceApplication
      * Called when data has been sync'd with the Proximity Kit server.
      */
     public void didSync() {
-        Log.d(TAG, "didSync(): Sycn'd with server");
+        Log.i(TAG, "didSync(): Sycn'd with server");
 
         // Access every beacon configured in the kit, printing out the value of an attribute
         // named "myKey"
@@ -313,8 +312,8 @@ public class AndroidProximityKitReferenceApplication
      *
      * @param e     The exception encountered while syncing
      */
-    public void didFailSync(Exception e) {
-        Log.d(TAG, "didFailSync() called with exception: " + e);
+    public void didFailSync(@NonNull Exception e) {
+        Log.e(TAG, "didFailSync() called with exception: " + e);
     }
 
     /***********************************************************************************************
@@ -334,7 +333,12 @@ public class AndroidProximityKitReferenceApplication
      * @param region    The <code>ProximityKitBeaconRegion</code> instance that was used to start
      *                  ranging for these beacons.
      */
-    public void didRangeBeaconsInRegion(Collection<ProximityKitBeacon> beacons, ProximityKitBeaconRegion region) {
+    public void didRangeBeaconsInRegion(@NonNull Collection<ProximityKitBeacon> beacons,
+                                        @NonNull ProximityKitBeaconRegion region) {
+        Log.d(
+                TAG,
+                "didRangeBeaconsInRegion: beacons=" + beacons + " region=" + region
+        );
         if (beacons.size() == 0) {
             return;
         }
@@ -369,12 +373,12 @@ public class AndroidProximityKitReferenceApplication
      * @param region    an <code>ProximityKitBeaconRegion</code> which defines the criteria of
      *                  beacons being monitored
      */
-    public void didEnterRegion(ProximityKitBeaconRegion region) {
+    public void didEnterRegion(@NonNull ProximityKitBeaconRegion region) {
         // In this example, this class sends a notification to the user whenever an beacon
         // matching a Region (defined above) are first seen.
         Log.d(
                 TAG,
-                "ENTER beacon region: " + region + " " +
+                "[didEnterRegion] ENTER beacon region: " + region + " " +
                         region.getAttributes().get("welcomeMessage")
         );
 
@@ -392,8 +396,8 @@ public class AndroidProximityKitReferenceApplication
      * @param region    an <code>ProximityKitBeaconRegion</code> that defines the criteria of
      *                  beacons being monitored
      */
-    public void didExitRegion(ProximityKitBeaconRegion region) {
-        Log.d(TAG, "didExitRegion called with region: " + region);
+    public void didExitRegion(@NonNull ProximityKitBeaconRegion region) {
+        Log.d(TAG, "[didExitRegion] EXIT beacon region: " + region);
     }
 
     @Override
@@ -407,7 +411,7 @@ public class AndroidProximityKitReferenceApplication
      * @param region    an <code>ProximityKitBeaconRegion</code> that defines the criteria of
      *                  beacons being monitored
      */
-    public void didDetermineStateForRegion(int state, ProximityKitBeaconRegion region) {
+    public void didDetermineStateForRegion(int state, @NonNull ProximityKitBeaconRegion region) {
         Log.d(TAG, "didDeterineStateForRegion called with state: " + state + "\tregion: " + region);
 
         switch (state) {
@@ -444,12 +448,13 @@ public class AndroidProximityKitReferenceApplication
      * @param geofence  a <code>ProximityKitGeofenceRegion</code> that defines the criteria of
      *                  Geofence to look for
      */
-    public void didEnterGeofence(ProximityKitGeofenceRegion region) {
+    public void didEnterGeofence(@NonNull ProximityKitGeofenceRegion region) {
         // In this example, this class sends a notification to the user whenever an beacon
         // matching a Region (defined above) are first seen.
         Log.d(
                 TAG,
-                "didEnterGeofenceRegion called with region: " + region + " " +
+                "didEnterGeofenceRegion called with region: " + region + " (" +
+                        region.getName() + ") " +
                         region.getAttributes().get("welcomeMessage")
         );
 
@@ -462,7 +467,7 @@ public class AndroidProximityKitReferenceApplication
 
         // Force a sync if we enter the main office so we ensure we have the latest data.
         // We wouldn't want the boss to think we weren't working ┌( ಠ_ಠ)┘
-        if (region.getAttributes().get("location") == MAIN_OFFICE_LOCATION) {
+        if (MAIN_OFFICE_LOCATION.equals(region.getAttributes().get("location"))) {
             forceSync();
         }
     }
@@ -474,7 +479,7 @@ public class AndroidProximityKitReferenceApplication
      * @param geofence  a <code>ProximityKitGeofenceRegion</code> that defines the criteria of
      *                  Geofence to look for
      */
-    public void didExitGeofence(ProximityKitGeofenceRegion region) {
+    public void didExitGeofence(@NonNull ProximityKitGeofenceRegion region) {
         Log.d(TAG, "didExitGeofenceRegion called with region: " + region);
     }
 
@@ -493,7 +498,8 @@ public class AndroidProximityKitReferenceApplication
      * @param geofence  the <code>ProximityKitGeofenceRegion</code> region this is event is
      *                  associated
      */
-    public void didDetermineStateForGeofence(int state, ProximityKitGeofenceRegion region) {
+    public void didDetermineStateForGeofence(int state,
+                                             @NonNull ProximityKitGeofenceRegion region) {
         Log.d(
                 TAG,
                 "didDeterineStateForGeofence called with state: " + state + "\tregion: " + region
@@ -659,55 +665,19 @@ public class AndroidProximityKitReferenceApplication
 
     /**
      * Generate the app's Proximity Kit configuration.
-     * <p/>
-     * This loads the properties for a kit from a {@code .properties} file bundled in the app. This
-     * file was be downloaded from the <a href="https://proximitykit.radiusnetworks.com">Proximity
-     * Kit server</a>.
-     * <p/>
-     * For newer Android applications, the file can be added to the {@code /assets} folder:
-     * <p/>
-     * <pre>
-     * {@code Properties properties = new Properties();
-     * try {
-     *     properties.load(getAssets().open("ProximityKit.properties"));
-     * } catch (IOException e) {
-     *     throw new IllegalStateException("Unable to load properties file!", e);
-     * }
-     * new Configuration(properties);
-     * }
-     * </pre>
-     * <p/>
-     * For older Android applications, or if you just prefer using Java resources, the file can be
-     * added to the {@code /resources} folder:
-     * <p/>
-     * <pre>
-     * {@code Properties properties = new Properties();
-     * InputStream in = getClassLoader().getResourceAsStream("ProximityKit.properties");
-     * if (in == null) {
-     *     throw new IllegalStateException("Unable to find ProximityKit.properties files");
-     * }
-     * try {
-     *     properties.load(in);
-     * } catch (IOException e) {
-     *     throw new IllegalStateException("Unable to load properties file!", e);
-     * }
-     * new Configuration(properties);
-     * }
-     * </pre>
-     * <p/>
-     * These details could just as easily been statically compiled into the app. They also could
-     * have been downloaded from a 3rd party server.
-     *
-     * @return A new {@link KitConfig} configured for the app's kit.
      */
-    private KitConfig loadConfig() {
-        Properties properties = new Properties();
-        try {
-            properties.load(getAssets().open("ProximityKit.properties"));
-        } catch (IOException e) {
-            throw new IllegalStateException("Unable to load properties file!", e);
-        }
-        return new KitConfig(properties);
+    private static Map<String, String> loadConfig() {
+        Map<String, String> settings = new HashMap<>();
+        settings.put(
+                KitConfig.CONFIG_API_URL,
+                "https://proximitykit.radiusnetworks.com/api/kits/129"
+        );
+        settings.put(
+                KitConfig.CONFIG_API_TOKEN,
+                "c6d567a668e758aa5d3ae008c12e6dbce306fa38d4f7d7ca6f359c818848d621"
+        );
+        settings.put(KitConfig.CONFIG_CELLULAR_DATA, "true");
+        return settings;
     }
 
     /**
